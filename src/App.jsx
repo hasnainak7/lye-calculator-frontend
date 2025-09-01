@@ -1,8 +1,11 @@
 
 // App.jsx
+
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "./App.css"; // 🌈 import rainbow styles
+import { injectSpeedInsights } from '@vercel/speed-insights';
+injectSpeedInsights();
 
 // const api = axios.create({
 //   baseURL: "https://lye-calculator.onrender.com",
