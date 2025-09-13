@@ -1,4 +1,6 @@
-// // App.jsx
+
+
+// App.jsx
 // import { useEffect, useMemo, useState } from "react";
 // import axios from "axios";
 // import "./App.css"; // 🌈 import rainbow styles
@@ -22,7 +24,7 @@
 //   const [loading, setLoading] = useState(false);
 //   const [err, setErr] = useState("");
 
-//   // ✅ hold fatty acids per oil
+//   // ✅ hold fatty acids for multiple oils
 //   const [fattyAcids, setFattyAcids] = useState({});
 
 //   useEffect(() => {
@@ -40,30 +42,32 @@
 //   const addRow = () => setRows([...rows, { oil: "", weight_g: "" }]);
 //   const removeRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
 
-//   // ✅ fetch fatty acids for each oil and store by name
-//   const fetchFattyAcids = async (oil) => {
-//     try {
-//       const res = await api.get(`/fatty-acids/${encodeURIComponent(oil)}`);
-//       setFattyAcids((prev) => ({
-//         ...prev,
-//         [oil]: res.data.fatty_acids,
-//       }));
-//     } catch {
-//       setFattyAcids((prev) => ({
-//         ...prev,
-//         [oil]: null,
-//       }));
-//     }
-//   };
+//   // ✅ automatically fetch fatty acids for all oils in rows
+//   useEffect(() => {
+//     rows.forEach((r) => {
+//       if (r.oil && !(r.oil in fattyAcids)) {
+//         api
+//           .get(`/fatty-acids/${encodeURIComponent(r.oil)}`)
+//           .then((res) => {
+//             setFattyAcids((prev) => ({
+//               ...prev,
+//               [r.oil]: res.data.fatty_acids,
+//             }));
+//           })
+//           .catch(() => {
+//             setFattyAcids((prev) => ({
+//               ...prev,
+//               [r.oil]: null,
+//             }));
+//           });
+//       }
+//     });
+//   }, [rows, fattyAcids]);
 
 //   const updateRow = (i, key, val) => {
 //     const clone = [...rows];
 //     clone[i] = { ...clone[i], [key]: val };
 //     setRows(clone);
-
-//     if (key === "oil" && val) {
-//       fetchFattyAcids(val);
-//     }
 //   };
 
 //   const calculate = async () => {
@@ -272,43 +276,40 @@
 //         </div>
 //       )}
 
-//       {/* ✅ show fatty acids for all selected oils */}
-//       {rows
-//         .filter((r) => r.oil)
-//         .map((r) => {
-//           const acids = fattyAcids[r.oil];
-//           return acids ? (
-//             <div
-//               key={r.oil}
-//               className="rainbow-border"
-//               style={{ marginTop: 16, borderRadius: 12, padding: 16 }}
-//             >
-//               <h2 className="rainbow-text" style={{ marginTop: 0 }}>
-//                 Fatty Acid Composition: {r.oil}
-//               </h2>
-//               <table width="100%" cellPadding="8">
-//                 <thead>
-//                   <tr>
-//                     <th align="left">Fatty Acid</th>
-//                     <th align="left">Percentage</th>
+//       {/* ✅ show fatty acids for ALL oils selected */}
+//       {rows.map((r) =>
+//         r.oil && fattyAcids[r.oil] ? (
+//           <div
+//             key={r.oil}
+//             className="rainbow-border"
+//             style={{ marginTop: 16, borderRadius: 12, padding: 16 }}
+//           >
+//             <h2 className="rainbow-text" style={{ marginTop: 0 }}>
+//               Fatty Acid Composition: {r.oil}
+//             </h2>
+//             <table width="100%" cellPadding="8">
+//               <thead>
+//                 <tr>
+//                   <th align="left">Fatty Acid</th>
+//                   <th align="left">Percentage</th>
+//                 </tr>
+//               </thead>
+//               <tbody>
+//                 {Object.entries(fattyAcids[r.oil]).map(([acid, val]) => (
+//                   <tr key={acid}>
+//                     <td>{acid}</td>
+//                     <td>{val}</td>
 //                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {Object.entries(acids).map(([acid, val]) => (
-//                     <tr key={acid}>
-//                       <td>{acid}</td>
-//                       <td>{val}</td>
-//                     </tr>
-//                   ))}
-//                 </tbody>
-//               </table>
-//             </div>
-//           ) : (
-//             <p key={r.oil} style={{ color: "crimson" }}>
-//               No fatty acid data for {r.oil}
-//             </p>
-//           );
-//         })}
+//                 ))}
+//               </tbody>
+//             </table>
+//           </div>
+//         ) : r.oil ? (
+//           <p key={r.oil} style={{ color: "crimson" }}>
+//             No fatty acid data for {r.oil}
+//           </p>
+//         ) : null
+//       )}
 
 //       <p style={{ fontSize: 12, opacity: 0.7, marginTop: 16 }}>
 //         ⚠️ Safety: lye is caustic—use protective gear, label containers, and double-check values for your specific oils.
@@ -316,6 +317,7 @@
 //     </div>
 //   );
 // }
+
 
 
 // App.jsx
@@ -332,6 +334,48 @@ function numberOrEmpty(v) {
   return Number.isFinite(n) ? n : "";
 }
 
+// ✅ Soap qualities calculator
+function calculateSoapQualities(acids) {
+  if (!acids) return null;
+
+  const get = (name) => Number(acids[name] || 0);
+
+  const hardness =
+    get("Lauric") + get("Myristic") + get("Palmitic") + get("Stearic");
+
+  const cleansing = get("Lauric") + get("Myristic");
+
+  const conditioning =
+    get("Oleic") + get("Linoleic") + get("Linolenic") + get("Ricinoleic");
+
+  const bubbly = get("Lauric") + get("Myristic") + get("Ricinoleic");
+
+  const creamy = get("Palmitic") + get("Stearic") + get("Ricinoleic");
+
+  return { hardness, cleansing, conditioning, bubbly, creamy };
+}
+
+// ✅ Combine fatty acids across oils using weights
+function calculateOverallFattyAcids(rows, fattyAcids) {
+  let totalWeight = rows.reduce((sum, r) => sum + (Number(r.weight_g) || 0), 0);
+  if (totalWeight === 0) return null;
+
+  const combined = {};
+
+  rows.forEach((r) => {
+    const acids = fattyAcids[r.oil];
+    if (!acids) return;
+
+    const weightFraction = Number(r.weight_g) / totalWeight;
+
+    Object.entries(acids).forEach(([acid, val]) => {
+      combined[acid] = (combined[acid] || 0) + Number(val) * weightFraction;
+    });
+  });
+
+  return combined;
+}
+
 export default function App() {
   const [availableOils, setAvailableOils] = useState([]);
   const [rows, setRows] = useState([{ oil: "", weight_g: "" }]);
@@ -342,7 +386,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
-  // ✅ hold fatty acids for multiple oils
+  // ✅ hold fatty acids per oil
   const [fattyAcids, setFattyAcids] = useState({});
 
   useEffect(() => {
@@ -360,32 +404,30 @@ export default function App() {
   const addRow = () => setRows([...rows, { oil: "", weight_g: "" }]);
   const removeRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
 
-  // ✅ automatically fetch fatty acids for all oils in rows
-  useEffect(() => {
-    rows.forEach((r) => {
-      if (r.oil && !(r.oil in fattyAcids)) {
-        api
-          .get(`/fatty-acids/${encodeURIComponent(r.oil)}`)
-          .then((res) => {
-            setFattyAcids((prev) => ({
-              ...prev,
-              [r.oil]: res.data.fatty_acids,
-            }));
-          })
-          .catch(() => {
-            setFattyAcids((prev) => ({
-              ...prev,
-              [r.oil]: null,
-            }));
-          });
-      }
-    });
-  }, [rows, fattyAcids]);
+  // ✅ fetch fatty acids for each oil and store by name
+  const fetchFattyAcids = async (oil) => {
+    try {
+      const res = await api.get(`/fatty-acids/${encodeURIComponent(oil)}`);
+      setFattyAcids((prev) => ({
+        ...prev,
+        [oil]: res.data.fatty_acids,
+      }));
+    } catch {
+      setFattyAcids((prev) => ({
+        ...prev,
+        [oil]: null,
+      }));
+    }
+  };
 
   const updateRow = (i, key, val) => {
     const clone = [...rows];
     clone[i] = { ...clone[i], [key]: val };
     setRows(clone);
+
+    if (key === "oil" && val) {
+      fetchFattyAcids(val);
+    }
   };
 
   const calculate = async () => {
@@ -594,16 +636,16 @@ export default function App() {
         </div>
       )}
 
-      {/* ✅ show fatty acids for ALL oils selected */}
-      {rows.map((r) =>
-        r.oil && fattyAcids[r.oil] ? (
+      {/* ✅ show fatty acids for all oils */}
+      {Object.entries(fattyAcids).map(([oil, acids]) =>
+        acids ? (
           <div
-            key={r.oil}
+            key={oil}
             className="rainbow-border"
             style={{ marginTop: 16, borderRadius: 12, padding: 16 }}
           >
             <h2 className="rainbow-text" style={{ marginTop: 0 }}>
-              Fatty Acid Composition: {r.oil}
+              Fatty Acid Composition: {oil}
             </h2>
             <table width="100%" cellPadding="8">
               <thead>
@@ -613,7 +655,7 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(fattyAcids[r.oil]).map(([acid, val]) => (
+                {Object.entries(acids).map(([acid, val]) => (
                   <tr key={acid}>
                     <td>{acid}</td>
                     <td>{val}</td>
@@ -622,12 +664,36 @@ export default function App() {
               </tbody>
             </table>
           </div>
-        ) : r.oil ? (
-          <p key={r.oil} style={{ color: "crimson" }}>
-            No fatty acid data for {r.oil}
+        ) : (
+          <p key={oil} style={{ color: "crimson" }}>
+            No fatty acid data for {oil}
           </p>
-        ) : null
+        )
       )}
+
+      {/* ✅ Overall Recipe Soap Qualities */}
+      {(() => {
+        const overallAcids = calculateOverallFattyAcids(rows, fattyAcids);
+        if (!overallAcids) return null;
+
+        const overallQualities = calculateSoapQualities(overallAcids);
+
+        return (
+          <div
+            className="rainbow-border"
+            style={{ marginTop: 24, borderRadius: 12, padding: 16 }}
+          >
+            <h2 className="rainbow-text">Overall Recipe Soap Qualities</h2>
+            <ul>
+              <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
+              <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
+              <li>Conditioning: {overallQualities.conditioning.toFixed(2)}</li>
+              <li>Bubbly: {overallQualities.bubbly.toFixed(2)}</li>
+              <li>Creamy: {overallQualities.creamy.toFixed(2)}</li>
+            </ul>
+          </div>
+        );
+      })()}
 
       <p style={{ fontSize: 12, opacity: 0.7, marginTop: 16 }}>
         ⚠️ Safety: lye is caustic—use protective gear, label containers, and double-check values for your specific oils.
