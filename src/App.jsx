@@ -289,39 +289,61 @@ export default function App() {
         </div>
       </div>
 
-      {/* Results */}
-      {result && (
-        <div className="rainbow-border" style={{ marginTop: 16, borderRadius: 12, padding: 16 }}>
-          <h2 className="rainbow-text">Results</h2>
-          <p>
-            Lye: <strong>{result.total_lye_g} g</strong> ({result.lye_type}) &nbsp; • &nbsp; Water:{" "}
-            <strong>{result.total_water_g} g</strong> &nbsp; • &nbsp; Water:lye used:{" "}
-            <strong>{result.water_ratio_used}</strong>
-          </p>
-          <table width="100%" cellPadding="8">
-            <thead>
-              <tr>
-                <th align="left">Oil</th>
-                <th align="left">SAP (NaOH)</th>
-                <th align="left">Lye (before SF)</th>
-                <th align="left">Lye (after SF)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.per_oil.map((r) => (
-                <tr key={r.oil}>
-                  <td>{r.oil}</td>
-                  <td>{r.sap_naoh}</td>
-                  <td>{r.lye_g_before_superfat}</td>
-                  <td>{r.lye_g_after_superfat}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
-      {/* ✅ Show fatty acids per oil */}
+      
+      
+      
+
+{/* Printable Section */}
+
+
+   {/* Print Button */}
+{(result || Object.keys(fattyAcids).length > 0) && (
+  <div style={{ marginTop: 16 }}>
+    <button
+      onClick={() => window.print()}
+      className="rainbow-button"
+    >
+      🖨️ Print Report
+    </button>
+  </div>
+)}
+<div id="print-section">
+
+  {/* Results */}
+  {result && (
+    <div className="rainbow-border" style={{ marginTop: 16, borderRadius: 12, padding: 16 }}>
+      <h2 className="rainbow-text">Results</h2>
+      <p>
+        Lye: <strong>{result.total_lye_g} g</strong> ({result.lye_type}) &nbsp; • &nbsp; Water:{" "}
+        <strong>{result.total_water_g} g</strong> &nbsp; • &nbsp; Water:lye used:{" "}
+        <strong>{result.water_ratio_used}</strong>
+      </p>
+      <table width="100%" cellPadding="8">
+        <thead>
+          <tr>
+            <th align="left">Oil</th>
+            <th align="left">SAP (NaOH)</th>
+            <th align="left">Lye (before SF)</th>
+            <th align="left">Lye (after SF)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {result.per_oil.map((r) => (
+            <tr key={r.oil}>
+              <td>{r.oil}</td>
+              <td>{r.sap_naoh}</td>
+              <td>{r.lye_g_before_superfat}</td>
+              <td>{r.lye_g_after_superfat}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+ 
+
+  {/* ✅ Show fatty acids per oil */}
       {Object.entries(fattyAcids).map(([oil, acids]) =>
         acids ? (
           <div key={oil} className="rainbow-border" style={{ marginTop: 16, borderRadius: 12, padding: 16 }}>
@@ -349,27 +371,30 @@ export default function App() {
           </p>
         )
       )}
+  
 
-      {/* ✅ Overall Recipe Soap Qualities */}
-      {(() => {
-        const overallAcids = calculateOverallFattyAcids(rows, fattyAcids);
-        if (!overallAcids) return null;
+  {/* Overall Recipe Soap Qualities */}
+  {(() => {
+    const overallAcids = calculateOverallFattyAcids(rows, fattyAcids);
+    if (!overallAcids) return null;
 
-        const overallQualities = calculateSoapQualities(overallAcids);
+    const overallQualities = calculateSoapQualities(overallAcids);
 
-        return (
-          <div className="rainbow-border" style={{ marginTop: 24, borderRadius: 12, padding: 16 }}>
-            <h2 className="rainbow-text">Overall Recipe Soap Qualities</h2>
-            <ul>
-              <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
-              <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
-              <li>Conditioning: {overallQualities.conditioning.toFixed(2)}</li>
-              <li>Bubbly: {overallQualities.bubbly.toFixed(2)}</li>
-              <li>Creamy: {overallQualities.creamy.toFixed(2)}</li>
-            </ul>
-          </div>
-        );
-      })()}
+    return (
+      <div className="rainbow-border" style={{ marginTop: 24, borderRadius: 12, padding: 16 }}>
+        <h2 className="rainbow-text">Overall Recipe Soap Qualities</h2>
+        <ul>
+          <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
+          <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
+          <li>Conditioning: {overallQualities.conditioning.toFixed(2)}</li>
+          <li>Bubbly: {overallQualities.bubbly.toFixed(2)}</li>
+          <li>Creamy: {overallQualities.creamy.toFixed(2)}</li>
+        </ul>
+      </div>
+    );
+  })()}
+</div>
+
 
       <p style={{ fontSize: 12, opacity: 0.7, marginTop: 16 }}>
         ⚠️ Safety: lye is caustic—use protective gear, label containers, and double-check values for your specific oils.

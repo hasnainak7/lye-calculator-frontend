@@ -96,4 +96,24 @@ tr:nth-child(even) {
   font-weight: 600;
   margin-top: 8px;
 }
+
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-section, #print-section * {
+    visibility: visible;
+  }
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+
 /* --- end of file --- */
+
+
