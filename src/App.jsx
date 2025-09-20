@@ -382,7 +382,7 @@ export default function App() {
 
     return (
       <div className="rainbow-border" style={{ marginTop: 24, borderRadius: 12, padding: 16 }}>
-        <h2 className="rainbow-text">Overall Recipe Soap Qualities</h2>
+        <h2 className="rainbow-text">Overall Recipe Soap Qualities %</h2>
         <ul>
           <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
           <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
