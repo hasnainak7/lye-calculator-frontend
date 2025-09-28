@@ -98,11 +98,19 @@ tr:nth-child(even) {
 }
 
 
+/* 🌈 Printable clean receipt */
 @media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide everything except print-section */
   body * {
     visibility: hidden;
   }
-  #print-section, #print-section * {
+  #print-section,
+  #print-section * {
     visibility: visible;
   }
   #print-section {
@@ -110,10 +118,13 @@ tr:nth-child(even) {
     left: 0;
     top: 0;
     width: 100%;
+    background: white;
+    padding: 20px;
+  }
+
+  /* Hide print button */
+  .rainbow-button {
+    display: none !important;
   }
 }
-
-
 /* --- end of file --- */
-
-

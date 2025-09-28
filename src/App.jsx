@@ -1,5 +1,4 @@
 
-
 // App.jsx
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -29,27 +28,38 @@ function parseFattyAcidValue(val) {
 // ✅ Soap qualities calculator
 function calculateSoapQualities(acids) {
   if (!acids) return null;
-
   const get = (name) => Number(acids[name] || 0);
 
   const hardness =
-    get("Lauric Acid") + get("Myristic Acid") + get("Palmitic Acid") + get("Stearic Acid");
+    get("Lauric Acid") +
+    get("Myristic Acid") +
+    get("Palmitic Acid") +
+    get("Stearic Acid");
 
   const cleansing = get("Lauric Acid") + get("Myristic Acid");
 
   const conditioning =
-    get("Oleic Acid") + get("Linoleic Acid") + get("Linolenic Acid") + get("Ricinoleic Acid");
+    get("Oleic Acid") +
+    get("Linoleic Acid") +
+    get("Linolenic Acid") +
+    get("Ricinoleic Acid");
 
-  const bubbly = get("Lauric Acid") + get("Myristic Acid") + get("Ricinoleic Acid");
+  const bubbly =
+    get("Lauric Acid") + get("Myristic Acid") + get("Ricinoleic Acid");
 
-  const creamy = get("Palmitic Acid") + get("Stearic Acid") + get("Ricinoleic Acid");
+  const creamy =
+    get("Palmitic Acid") + get("Stearic Acid") + get("Ricinoleic Acid");
 
   return { hardness, cleansing, conditioning, bubbly, creamy };
 }
 
 // ✅ Combine fatty acids across oils using weights
-function calculateOverallFattyAcids(rows, fattyAcids) {
-  let totalWeight = rows.reduce((sum, r) => sum + (Number(r.weight_g) || 0), 0);
+function calculateOverallFattyAcids(rows, fattyAcids, inputMode, batchSize) {
+  let totalWeight =
+    inputMode === "grams"
+      ? rows.reduce((sum, r) => sum + (Number(r.weight_g) || 0), 0)
+      : batchSize;
+
   if (totalWeight === 0) return null;
 
   const combined = {};
@@ -58,7 +68,12 @@ function calculateOverallFattyAcids(rows, fattyAcids) {
     const acids = fattyAcids[r.oil];
     if (!acids) return;
 
-    const weightFraction = Number(r.weight_g) / totalWeight;
+    let weightFraction = 0;
+    if (inputMode === "grams") {
+      weightFraction = Number(r.weight_g) / totalWeight;
+    } else if (inputMode === "percent") {
+      weightFraction = (Number(r.percent) || 0) / 100;
+    }
 
     Object.entries(acids).forEach(([acid, val]) => {
       const parsedVal = parseFattyAcidValue(val);
@@ -69,9 +84,21 @@ function calculateOverallFattyAcids(rows, fattyAcids) {
   return combined;
 }
 
+// ✅ normalize percentages to sum = 100
+function normalizePercentages(rows) {
+  const total = rows.reduce((sum, r) => sum + (Number(r.percent) || 0), 0);
+  if (total === 0) return rows;
+  return rows.map((r) => ({
+    ...r,
+    percent: ((Number(r.percent) || 0) / total) * 100,
+  }));
+}
+
 export default function App() {
   const [availableOils, setAvailableOils] = useState([]);
-  const [rows, setRows] = useState([{ oil: "", weight_g: "" }]);
+  const [rows, setRows] = useState([{ oil: "", weight_g: "", percent: "" }]);
+  const [inputMode, setInputMode] = useState("grams"); // grams | percent
+  const [batchSize, setBatchSize] = useState(1000); // only used in percent mode
   const [lyeType, setLyeType] = useState("NaOH");
   const [superfat, setSuperfat] = useState(5);
   const [waterRatio, setWaterRatio] = useState("");
@@ -89,12 +116,24 @@ export default function App() {
       .catch(() => setAvailableOils([]));
   }, []);
 
-  const totalOil = useMemo(
-    () => rows.reduce((sum, r) => sum + (Number(r.weight_g) || 0), 0),
-    [rows]
-  );
+  const totalOil = useMemo(() => {
+    if (inputMode === "grams") {
+      return rows.reduce((sum, r) => sum + (Number(r.weight_g) || 0), 0);
+    } else {
+      return batchSize;
+    }
+  }, [rows, inputMode, batchSize]);
 
-  const addRow = () => setRows([...rows, { oil: "", weight_g: "" }]);
+  // ✅ Add row with even split in percent mode
+  const addRow = () => {
+    let newRows = [...rows, { oil: "", weight_g: "", percent: "" }];
+    if (inputMode === "percent") {
+      const equalShare = 100 / newRows.length;
+      newRows = newRows.map((r) => ({ ...r, percent: equalShare }));
+    }
+    setRows(newRows);
+  };
+
   const removeRow = (i) => setRows(rows.filter((_, idx) => idx !== i));
 
   // ✅ fetch fatty acids for each oil and store by name
@@ -113,9 +152,15 @@ export default function App() {
     }
   };
 
+  // ✅ Update row & auto-normalize percentages
   const updateRow = (i, key, val) => {
-    const clone = [...rows];
+    let clone = [...rows];
     clone[i] = { ...clone[i], [key]: val };
+
+    if (inputMode === "percent" && key === "percent") {
+      clone = normalizePercentages(clone);
+    }
+
     setRows(clone);
 
     if (key === "oil" && val) {
@@ -128,12 +173,22 @@ export default function App() {
     setResult(null);
     setLoading(true);
     try {
-      const cleanRows = rows
-        .filter((r) => r.oil && Number(r.weight_g) > 0)
-        .map((r) => ({ oil: r.oil, weight_g: Number(r.weight_g) }));
+      let cleanRows;
+      if (inputMode === "grams") {
+        cleanRows = rows
+          .filter((r) => r.oil && Number(r.weight_g) > 0)
+          .map((r) => ({ oil: r.oil, weight_g: Number(r.weight_g) }));
+      } else {
+        cleanRows = rows
+          .filter((r) => r.oil && Number(r.percent) > 0)
+          .map((r) => ({
+            oil: r.oil,
+            weight_g: (Number(r.percent) / 100) * batchSize,
+          }));
+      }
 
       if (!cleanRows.length) {
-        setErr("Add at least one oil with a positive weight.");
+        setErr("Add at least one oil with a positive value.");
         setLoading(false);
         return;
       }
@@ -167,8 +222,40 @@ export default function App() {
         Lye Calculator
       </h1>
       <p style={{ marginTop: 0, opacity: 0.7 }}>
-        Enter your oils (grams). Choose lye type, superfat, and (optionally) water:lye ratio.
+        Enter your oils in grams or percentages of a batch. Choose lye type,
+        superfat, and (optionally) water:lye ratio.
       </p>
+
+      {/* Mode Switch */}
+      <div style={{ marginBottom: 12 }}>
+        <label>
+          <input
+            type="radio"
+            checked={inputMode === "grams"}
+            onChange={() => setInputMode("grams")}
+          />{" "}
+          Grams Mode
+        </label>{" "}
+        <label style={{ marginLeft: 12 }}>
+          <input
+            type="radio"
+            checked={inputMode === "percent"}
+            onChange={() => setInputMode("percent")}
+          />{" "}
+          Percent Mode
+        </label>
+      </div>
+
+      {inputMode === "percent" && (
+        <div style={{ marginBottom: 12 }}>
+          <label>Batch Size (g): </label>
+          <input
+            type="number"
+            value={batchSize}
+            onChange={(e) => setBatchSize(numberOrEmpty(e.target.value))}
+          />
+        </div>
+      )}
 
       {/* Input Section */}
       <div className="rainbow-border" style={{ borderRadius: 12, padding: 16 }}>
@@ -176,7 +263,11 @@ export default function App() {
           <thead>
             <tr>
               <th align="left">Oil</th>
-              <th align="left">Weight (g)</th>
+              {inputMode === "grams" ? (
+                <th align="left">Weight (g)</th>
+              ) : (
+                <th align="left">Percent (%)</th>
+              )}
               <th />
             </tr>
           </thead>
@@ -193,17 +284,31 @@ export default function App() {
                   />
                 </td>
                 <td>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0"
-                    value={r.weight_g}
-                    onChange={(e) =>
-                      updateRow(i, "weight_g", numberOrEmpty(e.target.value))
-                    }
-                    style={{ width: "100%" }}
-                  />
+                  {inputMode === "grams" ? (
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0"
+                      value={r.weight_g}
+                      onChange={(e) =>
+                        updateRow(i, "weight_g", numberOrEmpty(e.target.value))
+                      }
+                      style={{ width: "100%" }}
+                    />
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="0"
+                      value={r.percent}
+                      onChange={(e) =>
+                        updateRow(i, "percent", numberOrEmpty(e.target.value))
+                      }
+                      style={{ width: "100%" }}
+                    />
+                  )}
                 </td>
                 <td align="right">
                   <button
@@ -282,122 +387,131 @@ export default function App() {
         </div>
 
         <div style={{ marginTop: 16 }}>
-          <button onClick={calculate} disabled={loading} className="rainbow-button">
+          <button
+            onClick={calculate}
+            disabled={loading}
+            className="rainbow-button"
+          >
             {loading ? "Calculating..." : "Calculate"}
           </button>
           {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
         </div>
       </div>
 
-
-      
-      
-      
-
-{/* Printable Section */}
-
-
-   {/* Print Button */}
-{(result || Object.keys(fattyAcids).length > 0) && (
-  <div style={{ marginTop: 16 }}>
-    <button
-      onClick={() => window.print()}
-      className="rainbow-button"
-    >
-      🖨️ Print Report
-    </button>
-  </div>
-)}
-<div id="print-section">
-
-  {/* Results */}
-  {result && (
-    <div className="rainbow-border" style={{ marginTop: 16, borderRadius: 12, padding: 16 }}>
-      <h2 className="rainbow-text">Results</h2>
-      <p>
-        Lye: <strong>{result.total_lye_g} g</strong> ({result.lye_type}) &nbsp; • &nbsp; Water:{" "}
-        <strong>{result.total_water_g} g</strong> &nbsp; • &nbsp; Water:lye used:{" "}
-        <strong>{result.water_ratio_used}</strong>
-      </p>
-      <table width="100%" cellPadding="8">
-        <thead>
-          <tr>
-            <th align="left">Oil</th>
-            <th align="left">SAP (NaOH)</th>
-            <th align="left">Lye (before SF)</th>
-            <th align="left">Lye (after SF)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {result.per_oil.map((r) => (
-            <tr key={r.oil}>
-              <td>{r.oil}</td>
-              <td>{r.sap_naoh}</td>
-              <td>{r.lye_g_before_superfat}</td>
-              <td>{r.lye_g_after_superfat}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
- 
-
-  {/* ✅ Show fatty acids per oil */}
-      {Object.entries(fattyAcids).map(([oil, acids]) =>
-        acids ? (
-          <div key={oil} className="rainbow-border" style={{ marginTop: 16, borderRadius: 12, padding: 16 }}>
-            <h2 className="rainbow-text">Fatty Acid Composition: {oil}</h2>
+      {/* Results, fatty acids & qualities */}
+      <div id="print-section">
+        {result && (
+          <div
+            className="rainbow-border"
+            style={{ marginTop: 16, borderRadius: 12, padding: 16 }}
+          >
+            <h2 className="rainbow-text">Results</h2>
+            <p>
+              Lye: <strong>{result.total_lye_g} g</strong> ({result.lye_type})
+              &nbsp; • &nbsp; Water:{" "}
+              <strong>{result.total_water_g} g</strong> &nbsp; • &nbsp;
+              Water:lye used: <strong>{result.water_ratio_used}</strong>
+            </p>
             <table width="100%" cellPadding="8">
               <thead>
                 <tr>
-                  <th align="left">Fatty Acid</th>
-                  <th align="left">Percentage</th>
+                  <th align="left">Oil</th>
+                  <th align="left">SAP (NaOH)</th>
+                  <th align="left">Lye (before SF)</th>
+                  <th align="left">Lye (after SF)</th>
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(acids).map(([acid, val]) => (
-                  <tr key={acid}>
-                    <td>{acid}</td>
-                    <td>{val}</td>
+                {result.per_oil.map((r) => (
+                  <tr key={r.oil}>
+                    <td>{r.oil}</td>
+                    <td>{r.sap_naoh}</td>
+                    <td>{r.lye_g_before_superfat}</td>
+                    <td>{r.lye_g_after_superfat}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        ) : (
-          <p key={oil} style={{ color: "crimson" }}>
-            No fatty acid data for {oil}
-          </p>
-        )
-      )}
-  
+        )}
 
-  {/* Overall Recipe Soap Qualities */}
-  {(() => {
-    const overallAcids = calculateOverallFattyAcids(rows, fattyAcids);
-    if (!overallAcids) return null;
+        {Object.entries(fattyAcids).map(([oil, acids]) =>
+          acids ? (
+            <div
+              key={oil}
+              className="rainbow-border"
+              style={{ marginTop: 16, borderRadius: 12, padding: 16 }}
+            >
+              <h2 className="rainbow-text">
+                Fatty Acid Composition: {oil}
+              </h2>
+              <table width="100%" cellPadding="8">
+                <thead>
+                  <tr>
+                    <th align="left">Fatty Acid</th>
+                    <th align="left">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Object.entries(acids).map(([acid, val]) => (
+                    <tr key={acid}>
+                      <td>{acid}</td>
+                      <td>{val}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p key={oil} style={{ color: "crimson" }}>
+              No fatty acid data for {oil}
+            </p>
+          )
+        )}
 
-    const overallQualities = calculateSoapQualities(overallAcids);
+        {(() => {
+          const overallAcids = calculateOverallFattyAcids(
+            rows,
+            fattyAcids,
+            inputMode,
+            batchSize
+          );
+          if (!overallAcids) return null;
 
-    return (
-      <div className="rainbow-border" style={{ marginTop: 24, borderRadius: 12, padding: 16 }}>
-        <h2 className="rainbow-text">Overall Recipe Soap Qualities %</h2>
-        <ul>
-          <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
-          <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
-          <li>Conditioning: {overallQualities.conditioning.toFixed(2)}</li>
-          <li>Bubbly: {overallQualities.bubbly.toFixed(2)}</li>
-          <li>Creamy: {overallQualities.creamy.toFixed(2)}</li>
-        </ul>
+          const overallQualities = calculateSoapQualities(overallAcids);
+
+          return (
+            <div
+              className="rainbow-border"
+              style={{ marginTop: 24, borderRadius: 12, padding: 16 }}
+            >
+              <h2 className="rainbow-text">Overall Recipe Soap Qualities %</h2>
+              <ul>
+                <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
+                <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
+                <li>
+                  Conditioning: {overallQualities.conditioning.toFixed(2)}
+                </li>
+                <li>Bubbly: {overallQualities.bubbly.toFixed(2)}</li>
+                <li>Creamy: {overallQualities.creamy.toFixed(2)}</li>
+              </ul>
+            </div>
+          );
+        })()}
       </div>
-    );
-  })()}
-</div>
 
+      {/* Print Button */}
+      {(result || Object.keys(fattyAcids).length > 0) && (
+        <div style={{ marginTop: 16 }}>
+          <button onClick={() => window.print()} className="rainbow-button">
+            🖨️ Print Report
+          </button>
+        </div>
+      )}
 
       <p style={{ fontSize: 12, opacity: 0.7, marginTop: 16 }}>
-        ⚠️ Safety: lye is caustic—use protective gear, label containers, and double-check values for your specific oils.
+        ⚠️ Safety: lye is caustic—use protective gear, label containers, and
+        double-check values for your specific oils.
       </p>
     </div>
   );
