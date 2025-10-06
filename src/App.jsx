@@ -500,15 +500,15 @@ export default function App() {
               className="rainbow-border"
               style={{ marginTop: 24, borderRadius: 12, padding: 16 }}
             >
-              <h2 className="rainbow-text">Overall Recipe Soap Qualities</h2>
+              <h2 className="rainbow-text">Overall Recipe Soap Qualities %</h2>
               <ul>
-                <li>Hardness: {overallQualities.hardness.toFixed(2)}</li>
-                <li>Cleansing: {overallQualities.cleansing.toFixed(2)}</li>
+                <li>Hardness: {overallQualities.hardness.toFixed(2)}%</li>
+                <li>Cleansing: {overallQualities.cleansing.toFixed(2)}%</li>
                 <li>
                   Conditioning: {overallQualities.conditioning.toFixed(2)}
-                </li>
-                <li>Bubbly: {overallQualities.bubbly.toFixed(2)}</li>
-                <li>Creamy: {overallQualities.creamy.toFixed(2)}</li>
+                %</li>
+                <li>Bubbly: {overallQualities.bubbly.toFixed(2)}%</li>
+                <li>Creamy: {overallQualities.creamy.toFixed(2)}%</li>
               </ul>
             </div>
           );
