@@ -89,7 +89,7 @@ export default function App() {
   const [mode, setMode] = useState("grams"); // grams | percent
   const [batchSize, setBatchSize] = useState(1000);
   const [lyeType, setLyeType] = useState("NaOH");
-  const [superfat, setSuperfat] = useState(5);
+  const [superfat, setSuperfat] = useState(0);
   const [waterRatio, setWaterRatio] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -339,7 +339,7 @@ export default function App() {
               type="number"
               min="0.5"
               step="0.1"
-              placeholder={lyeType === "NaOH" ? "default 2.5" : "default 3.0"}
+              placeholder={lyeType === "NaOH" ? "default 2.0" : "default 2.0"}
               value={waterRatio}
               onChange={(e) => setWaterRatio(numberOrEmpty(e.target.value))}
               style={{ width: "100%" }}
