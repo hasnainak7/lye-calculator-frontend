@@ -374,6 +374,8 @@ export default function App() {
 
       <div id="print-section">
         {/* Results */}
+
+        
         {result && (
           <div
             className="rainbow-border"

@@ -52,16 +52,22 @@ body {
 }
 
 /* 🌈 Inputs & Selects */
-input, select {
+input, select, textarea {
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
   outline: none;
   width: 100%;
   transition: border 0.2s, box-shadow 0.2s;
+  background: white !important;  /* ✅ white background */
+  color: black !important;       /* ✅ black text */
 }
 
-input:focus, select:focus {
+input::placeholder, textarea::placeholder {
+  color: #555; /* ✅ softer gray placeholders */
+}
+
+input:focus, select:focus, textarea:focus {
   border: 1px solid #3a86ff;
   box-shadow: 0 0 6px rgba(58, 134, 255, 0.5);
 }
@@ -78,7 +84,7 @@ th {
   background: linear-gradient(90deg, #fceabb, #f8b500);
   padding: 10px;
   font-weight: 700;
-  color: #222;
+  color: #000000;
 }
 
 td {
@@ -97,34 +103,33 @@ tr:nth-child(even) {
   margin-top: 8px;
 }
 
-
-/* 🌈 Printable clean receipt */
 @media print {
   body {
     background: white !important;
     color: black !important;
   }
 
-  /* Hide everything except print-section */
-  body * {
-    visibility: hidden;
-  }
-  #print-section,
-  #print-section * {
-    visibility: visible;
-  }
-  #print-section {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    background: white;
-    padding: 20px;
+  .rainbow-text {
+    background: white !important;
+    -webkit-text-fill-color: black !important;
+    color: black !important;
   }
 
-  /* Hide print button */
+  th {
+    background: #eee !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rainbow-border {
+    border: 1px solid black !important;
+    box-shadow: none !important;
+  }
+
   .rainbow-button {
     display: none !important;
   }
 }
+
 /* --- end of file --- */
