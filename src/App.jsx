@@ -334,7 +334,7 @@ export default function App() {
               type="number"
               min="0.5"
               step="0.1"
-              placeholder={lyeType === "NaOH" ? "default 2.0" : "default 2.0"}
+              placeholder={lyeType === "NaOH" ? "default 1.0" : "default 1.0"}
               value={waterRatio}
               onChange={(e) => setWaterRatio(numberOrEmpty(e.target.value))}
               style={{ width: "100%" }}
