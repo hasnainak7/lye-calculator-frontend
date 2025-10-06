@@ -477,3 +477,169 @@
 //   );
 // }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* App.css */
+
+/* 🌈 Global Styles */
+body {
+  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  color: #222;
+}
+
+/* 🌈 Gradient Text */
+.rainbow-text {
+  background: linear-gradient(90deg, #ff006e, #ffbe0b, #3a86ff, #8338ec, #03ce17);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+
+/* 🌈 Card Containers */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border: 2px solid transparent;
+  border-image: linear-gradient(90deg, #ff006e, #ffbe0b, #3a86ff, #8338ec, #06d6a0) 1;
+  animation: rainbow-border 8s linear infinite;
+}
+
+@keyframes rainbow-border {
+  0% { border-image-source: linear-gradient(90deg, #ff006e, #ffbe0b, #3a86ff, #8338ec, #06d6a0); }
+  100% { border-image-source: linear-gradient(450deg, #ff006e, #ffbe0b, #3a86ff, #8338ec, #06d6a0); }
+}
+
+/* 🌈 Buttons */
+.rainbow-button {
+  background: linear-gradient(90deg, #ff006e, #ffbe0b, #3a86ff, #8338ec, #06d6a0);
+  color: white;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.rainbow-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+/* 🌈 Inputs & Selects */
+input, select, textarea {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  width: 100%;
+  transition: border 0.2s, box-shadow 0.2s;
+  background: white !important;  /* ✅ white background */
+  color: black !important;       /* ✅ black text */
+}
+
+input::placeholder, textarea::placeholder {
+  color: #555; /* ✅ softer gray placeholders */
+}
+
+input:focus, select:focus, textarea:focus {
+  border: 1px solid #3a86ff;
+  box-shadow: 0 0 6px rgba(58, 134, 255, 0.5);
+}
+
+/* 🌈 Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  background: linear-gradient(90deg, #fceabb, #f8b500);
+  padding: 10px;
+  font-weight: 700;
+  color: #000000;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+tr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* Error message */
+.error {
+  color: crimson;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .rainbow-text {
+    background: white !important;
+    -webkit-text-fill-color: black !important;
+    color: black !important;
+  }
+
+  th {
+    background: #eee !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rainbow-border {
+    border: 1px solid black !important;
+    box-shadow: none !important;
+  }
+
+  .rainbow-button {
+    display: none !important;
+  }
+}
+
+/* --- end of file --- */

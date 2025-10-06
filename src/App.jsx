@@ -179,14 +179,9 @@ export default function App() {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 900,
-        padding: 24,
-        margin: "0 auto",
-        fontFamily: "system-ui, Arial",
-      }}
-    >
+    <div className="app-container">
+
+    
       <h1 className="rainbow-text" style={{ marginBottom: 8 }}>
         Lye Calculator
       </h1>
@@ -375,7 +370,7 @@ export default function App() {
       <div id="print-section">
         {/* Results */}
 
-        
+
         {result && (
           <div
             className="rainbow-border"

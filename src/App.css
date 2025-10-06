@@ -1,11 +1,21 @@
-/* App.css */
-
 /* 🌈 Global Styles */
 body {
   background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
   margin: 0;
   font-family: "Inter", system-ui, sans-serif;
   color: #222;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* keeps content top-centered */
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* 🌈 Container (main calculator wrapper) */
+.app-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 /* 🌈 Gradient Text */
@@ -14,18 +24,20 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
+  text-align: center;
 }
 
 /* 🌈 Card Containers */
-.card {
+.rainbow-border {
   background: #fff;
   border-radius: 16px;
   padding: 20px;
-  margin-top: 20px;
+  margin: 20px auto;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   border: 2px solid transparent;
   border-image: linear-gradient(90deg, #ff006e, #ffbe0b, #3a86ff, #8338ec, #06d6a0) 1;
   animation: rainbow-border 8s linear infinite;
+  max-width: 700px;
 }
 
 @keyframes rainbow-border {
@@ -52,22 +64,18 @@ body {
 }
 
 /* 🌈 Inputs & Selects */
-input, select, textarea {
-  padding: 8px 10px;
+input, select {
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
   outline: none;
   width: 100%;
+  background: #fff;
+  color: #000;
   transition: border 0.2s, box-shadow 0.2s;
-  background: white !important;  /* ✅ white background */
-  color: black !important;       /* ✅ black text */
 }
 
-input::placeholder, textarea::placeholder {
-  color: #555; /* ✅ softer gray placeholders */
-}
-
-input:focus, select:focus, textarea:focus {
+input:focus, select:focus {
   border: 1px solid #3a86ff;
   box-shadow: 0 0 6px rgba(58, 134, 255, 0.5);
 }
@@ -77,18 +85,20 @@ table {
   border-collapse: collapse;
   width: 100%;
   font-size: 14px;
+  margin-top: 12px;
 }
 
 th {
-  text-align: left;
+  text-align: center;
   background: linear-gradient(90deg, #fceabb, #f8b500);
   padding: 10px;
   font-weight: 700;
-  color: #000000;
+  color: #000;
 }
 
 td {
   padding: 10px;
+  text-align: center;
   border-bottom: 1px solid #eee;
 }
 
@@ -101,8 +111,10 @@ tr:nth-child(even) {
   color: crimson;
   font-weight: 600;
   margin-top: 8px;
+  text-align: center;
 }
 
+/* Printing adjustments */
 @media print {
   body {
     background: white !important;
@@ -110,7 +122,7 @@ tr:nth-child(even) {
   }
 
   .rainbow-text {
-    background: white !important;
+    background: none !important;
     -webkit-text-fill-color: black !important;
     color: black !important;
   }
@@ -132,4 +144,18 @@ tr:nth-child(even) {
   }
 }
 
-/* --- end of file --- */
+/* Responsive Layout */
+@media (max-width: 768px) {
+  .rainbow-border {
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  input, select {
+    font-size: 14px;
+  }
+}
